@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Gothenburg Runners' Guide",
+  "description": "The ultimate runners' guide to cafes and bars in Gothenburg. Find routes to the best post-run spots.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
