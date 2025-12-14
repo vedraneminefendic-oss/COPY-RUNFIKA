@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import Map, { Marker, Source, Layer, MapRef, NavigationControl } from 'react-map-gl/maplibre';
+import Map, { Marker, Source, Layer, MapRef, NavigationControl } from 'react-map-gl';
 import maplibregl from 'maplibre-gl';
 import { DEFAULT_CENTER, ZOOM_LEVEL, FEATURED_CAFES, MAP_STYLE } from './constants';
 import { getWalkingRoute, getDetourRoute, getDistance, fetchPointElevation } from './services/mapboxService';
@@ -213,7 +213,12 @@ const App: React.FC = () => {
         {selectedDestination?.route?.geometry && (
             <Source id="route" type="geojson" data={selectedDestination.route.geometry}>
                 <Layer id="route-line-casing" type="line" paint={{ 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.8 }} />
-                <Layer id="route-line" type="line" paint={{ 'line-color': '#f59e0b', 'line-width': 5, 'line-opacity': 0.9, 'line-cap': 'round', 'line-join': 'round' }} />
+                <Layer 
+                  id="route-line" 
+                  type="line" 
+                  layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                  paint={{ 'line-color': '#f59e0b', 'line-width': 5, 'line-opacity': 0.9 }} 
+                />
             </Source>
         )}
         {selectedDestination?.route?.viaWaypoint && (
