@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { EnrichedDestination, Product } from '../types';
-import { MapPin, Navigation, Loader2, Clock, ArrowLeft, Footprints, Sliders as RouteIcon, Dice5, Download, X, Repeat, CloudSun, CloudRain, Sun, Wind, Trees, Mountain, AlertTriangle, Filter, ChevronDown, Info, Mail, Heart, ArrowDownAZ, ShoppingBag } from 'lucide-react';
+import { MapPin, Navigation, Loader2, Clock, ArrowLeft, Footprints, SlidersHorizontal as RouteIcon, Dice5, Download, X, Repeat, CloudSun, CloudRain, Sun, Wind, Trees, Mountain, AlertTriangle, Filter, ChevronDown, Info, Mail, Heart, ArrowDownAZ, ShoppingBag } from 'lucide-react';
 import { getOpenStatus } from '../utils/openingHours';
 import { generateGPX } from '../services/gpxService';
 import { EXPOSED_LOCATIONS, RECOMMENDED_GEAR } from '../constants';
@@ -115,37 +115,37 @@ const Sidebar: React.FC<SidebarProps> = ({
   }, [selectedDestination]);
 
   // Mobile Swipe Handlers
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const onTouchStart = (e: React.TouchEvent) => {
     // Only track if we are at the very top, otherwise we are just scrolling
     if (containerRef.current && containerRef.current.scrollTop === 0) {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientY);
+        setTouchEndY(null);
+        setTouchStartY(e.targetTouches[0].clientY);
     } else {
-        setTouchStart(null);
+        setTouchStartY(null);
     }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (touchStart) {
-        setTouchEnd(e.targetTouches[0].clientY);
+    if (touchStartY) {
+        setTouchEndY(e.targetTouches[0].clientY);
     }
   };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
+    if (!touchStartY || !touchEndY) return;
+    const distance = touchStartY - touchEndY;
     const isSwipeDown = distance < -75; // Threshold
     
     // Only close if we swiped down and we were at the top
     if (isSwipeDown && isMobile && containerRef.current && containerRef.current.scrollTop === 0) {
       onCloseSidebar();
     }
-    setTouchStart(null);
-    setTouchEnd(null);
+    setTouchStartY(null);
+    setTouchEndY(null);
   };
 
   const commitRouteUpdate = (dist: number, roundTrip: boolean, scenic: boolean, immediate = false) => {
