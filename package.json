@@ -1,7 +1,7 @@
 {
   "name": "fikarun-gbg",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,9 +12,9 @@
   "dependencies": {
     "@google/genai": "^0.1.1",
     "lucide-react": "^0.344.0",
-    "maplibre-gl": "^5.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "maplibre-gl": "5.15.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
