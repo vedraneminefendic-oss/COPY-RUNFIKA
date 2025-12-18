@@ -8,10 +8,13 @@ import Sidebar from './components/Sidebar';
 import { Locate, Menu, List, AlertTriangle } from 'lucide-react';
 import { getOpenStatus } from './utils/openingHours';
 
-// Set worker URL to version 4.7.1 to match CSS and pinned importmap
+// MapLibre v5 CSS import for Vite/modern environments
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+// Set worker URL to MapLibre v5.1.0 to match package.json and resolve cross-origin loop
 try {
   // @ts-ignore
-  maplibregl.workerUrl = "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl-csp-worker.js";
+  maplibregl.workerUrl = "https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl-csp-worker.js";
 } catch (e) {
   console.warn("Failed to set maplibregl workerUrl", e);
 }
@@ -25,12 +28,14 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-// Fix: Use the imported Component class to ensure TypeScript correctly identifies the base class and provides 'props'
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: null
-  };
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
@@ -113,7 +118,7 @@ const AppContent: React.FC = () => {
         attributionControl: false,
         refreshExpiredTiles: false,
         trackResize: true,
-        hash: false // CRITICAL: Disable hash to prevent cross-origin errors in iframe
+        hash: false // Disable hash to prevent cross-origin errors in restricted frames
       });
 
       map.current.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-left');

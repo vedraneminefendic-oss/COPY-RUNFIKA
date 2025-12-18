@@ -7,7 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <link href="https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.css" rel="stylesheet" />
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,10 +15,14 @@
     
     <style>
       body, html, #root { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background-color: #f5f5f4; }
+      
       .maplibregl-ctrl-logo { display: none !important; }
+      
+      /* Hide scrollbars */
       ::-webkit-scrollbar { display: none; }
       * { -ms-overflow-style: none; scrollbar-width: none; }
       
+      /* Simple Loader Styles */
       .initial-loader {
         height: 100vh; width: 100vw; display: flex; flex-direction: column;
         justify-content: center; align-items: center; color: #78716c; font-family: 'Inter', sans-serif;
@@ -26,23 +30,22 @@
       .initial-loader svg { animation: spin 1s linear infinite; margin-bottom: 1rem; color: #d97706; }
       @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
-
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/": "https://esm.sh/react-dom@19.0.0/",
-    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
-    "maplibre-gl": "https://esm.sh/maplibre-gl@4.7.1",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "maplibre-gl": "https://esm.sh/maplibre-gl@^5.15.0",
+    "maplibre-gl/": "https://esm.sh/maplibre-gl@^5.15.0/",
     "vite": "https://esm.sh/vite@^7.3.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
-  </head>
+</head>
   <body>
     <div id="root">
       <div class="initial-loader">
