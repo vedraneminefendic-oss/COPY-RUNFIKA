@@ -12,20 +12,23 @@ interface CachedItem {
   generatedAtDistance: number; // The distance when this was generated
 }
 
+// Robust error handling with exponential backoff retry logic
+const fetchWithRetry = async <T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries <= 0) throw error;
+    // Exponential backoff
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return fetchWithRetry(fn, retries - 1, delay * 2);
+  }
+};
+
 export const curateDestinations = async (
   destinations: EnrichedDestination[]
 ): Promise<EnrichedDestination[]> => {
-  let apiKey = "";
-  
-  try {
-    // @ts-ignore
-    const env = typeof process !== 'undefined' ? process.env : undefined;
-    if (env) {
-      apiKey = env.API_KEY || "";
-    }
-  } catch (e) {
-    console.debug("Could not access process.env");
-  }
+  // Use process.env.API_KEY directly as per guidelines
+  const apiKey = process.env.API_KEY;
 
   // 1. Retrieve and Parse Cache
   let cache: Record<string, CachedItem> = {};
@@ -72,8 +75,6 @@ export const curateDestinations = async (
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    
     const placesInput = placesToEnrich.map(d => ({
       id: d.id,
       name: d.name,
@@ -81,43 +82,52 @@ export const curateDestinations = async (
       category: d.category
     }));
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: JSON.stringify(placesInput),
-      config: {
-        systemInstruction: `You are a fitness and lifestyle coach. 
-        You will receive a list of potential running destinations (cafes or bars) with their run distances.
-        
-        Your task is to generate a catchy "Run Name", a short motivating description (1 sentence), and a "Pro Tip" for runners.
-        
-        CRITICAL: The "Run Name" and description MUST reflect the distance.
-        - Short (<2km): "Sprint", "Dash", "Warm-up".
-        - Medium (3-8km): "Run", "Jog", "Loop".
-        - Long (>10km): "Challenge", "Endurance", "Long Run".
-        
-        If it's a bar, make the tone fun/rewarding (Earn your beer). 
-        If it's a cafe, make it energetic (Run for coffee).
-        
-        Example: 
-        Input: 500m to Bar. Output: "The Thirsty Sprint" - "Barely a warm-up, but the beer is cold."
-        Input: 15km to Cafe. Output: "The Caffeine Ultra" - "A serious endurance test ending with the city's best espresso."`,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              id: { type: Type.STRING },
-              geminiTitle: { type: Type.STRING },
-              geminiDescription: { type: Type.STRING },
-              geminiTip: { type: Type.STRING },
-            },
-            required: ["id", "geminiTitle", "geminiDescription", "geminiTip"]
+    // Implementing retry logic for robustness against API errors
+    const response = await fetchWithRetry(async () => {
+      // Create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
+      return await ai.models.generateContent({
+        // Using gemini-3-flash-preview for basic text tasks (curation/summarization)
+        model: "gemini-3-flash-preview",
+        contents: JSON.stringify(placesInput),
+        config: {
+          systemInstruction: `You are a fitness and lifestyle coach. 
+          You will receive a list of potential running destinations (cafes or bars) with their run distances.
+          
+          Your task is to generate a catchy "Run Name", a short motivating description (1 sentence), and a "Pro Tip" for runners.
+          
+          CRITICAL: The "Run Name" and description MUST reflect the distance.
+          - Short (<2km): "Sprint", "Dash", "Warm-up".
+          - Medium (3-8km): "Run", "Jog", "Loop".
+          - Long (>10km): "Challenge", "Endurance", "Long Run".
+          
+          If it's a bar, make the tone fun/rewarding (Earn your beer). 
+          If it's a cafe, make it energetic (Run for coffee).
+          
+          Example: 
+          Input: 500m to Bar. Output: "The Thirsty Sprint" - "Barely a warm-up, but the beer is cold."
+          Input: 15km to Cafe. Output: "The Caffeine Ultra" - "A serious endurance test ending with the city's best espresso."`,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                id: { type: Type.STRING },
+                geminiTitle: { type: Type.STRING },
+                geminiDescription: { type: Type.STRING },
+                geminiTip: { type: Type.STRING },
+              },
+              required: ["id", "geminiTitle", "geminiDescription", "geminiTip"],
+              propertyOrdering: ["id", "geminiTitle", "geminiDescription", "geminiTip"]
+            }
           }
         }
-      }
+      });
     });
 
+    // Accessing .text property directly as per guidelines (not .text())
     const enrichedData = JSON.parse(response.text || "[]");
 
     // 4. Update Cache with new data AND the distance it was generated for
@@ -156,12 +166,12 @@ export const curateDestinations = async (
     });
 
   } catch (error) {
-    console.warn("Gemini curation skipped due to error:", error);
-    // Fallback to cache if API fails
+    console.warn("Gemini curation skipped due to persistent error:", error);
+    // Fallback to cache if API fails even after retries
     return destinations.map(d => {
         const cachedInfo = cache[d.id];
         if (cachedInfo) {
-          return { ...d, ...cachedInfo };
+          return { ...d, geminiTitle: cachedInfo.geminiTitle, geminiDescription: cachedInfo.geminiDescription, geminiTip: cachedInfo.geminiTip };
         }
         return d;
     });
